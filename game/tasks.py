@@ -9,6 +9,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from .models import Battle
+from .utils import init_sets
 
 r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL)
 
@@ -82,6 +83,10 @@ def find_battles(elo_catchment, battle_type):
             competitor_2_id=user2,
         )
         battle.save()
+
+        for set_obj in init_sets(battle):
+            set_obj.battle = battle
+            set_obj.save()
 
         battle_list.append(battle)
         result = serializers.serialize('json', battle_list, fields=['battle_type', 'competitor_1', 'competitor_2'])
