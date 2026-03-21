@@ -35,7 +35,6 @@ class MatchmakingConsumer(WebsocketConsumer):
 
     def matchmaking_alert(self, event):
         message = event['message']
-        print(message)
         self.send(text_data=json.dumps({'message': message}))
 
 
