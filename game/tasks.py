@@ -18,12 +18,19 @@ def join_battle_queue(user_id, elo, battle_type):
     elo_catchment = int(math.floor(elo / 1000) * 1000) # ELO catchments increment by 1000
 
     matchmaking_queue_name = f'{battle_type}_{elo_catchment}_matchmaking_queue'
+    currently_queued_users = r.lrange('queued_users', 0, -1)
+
+    if bytes(str(user_id), 'ascii') in currently_queued_users:
+        return {
+            'status': 'already_queued',
+        }
 
     user = json.dumps({
         'user_id': user_id,
         'elo': elo,
     })
 
+    r.rpush('queued_users', user_id)
     r.rpush(matchmaking_queue_name, user)
 
     if r.llen(matchmaking_queue_name) >= 2:
@@ -98,6 +105,9 @@ def find_battles(elo_catchment, battle_type):
                     'battle_id': str(battle.pk),
                 })}
         )
+
+        r.rpop('queued_users', user1)
+        r.rpop('queued_users', user2)
 
     r.set(f'{matchmaking_queue_name}:status', 'inactive')
 
