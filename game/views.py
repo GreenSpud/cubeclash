@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from .tasks import join_battle_queue
 from .models import Battle
@@ -11,8 +12,19 @@ from .utils import init_sets
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
 
-class BattleView(LoginRequiredMixin, TemplateView):
-    template_name = 'battle.html'
+class BattleView(LoginRequiredMixin, DetailView):
+    model = Battle
+    template_name = 'battle_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        waiting_for_opponent = self.object.competitor_2 is None
+        context['waiting_for_opponent'] = waiting_for_opponent
+        context['user_competitor_number'] = 1 if self.object.competitor_1_id == self.request.user.pk else 2
+        if waiting_for_opponent:
+            context['base_url'] = settings.BASE_URL
+
+        return context
 
 class CreateBattleView(View):
     def post(self, request, *args, **kwargs):
