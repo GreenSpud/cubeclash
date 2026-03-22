@@ -8,7 +8,7 @@ from django.core import serializers
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from .models import Battle
+from .models import Battle, Set
 from .utils import init_sets
 
 r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL)
@@ -112,3 +112,40 @@ def find_battles(elo_catchment, battle_type):
     r.set(f'{matchmaking_queue_name}:status', 'inactive')
 
     return result
+
+@shared_task
+def submit_time(battle_id, set_id, competitor_number: int, time: float):
+    set_obj = Set.objects.get(pk=set_id)
+    competitor_1_results = set_obj.competitor_1_results
+    competitor_2_results = set_obj.competitor_2_results
+    channel_layer = get_channel_layer()
+    battle_group_name = f'battle_{battle_id}'
+
+    if competitor_number == 1:
+        competitor_1_results += ';' + str(time)
+        set_obj.competitor_1_results = competitor_1_results
+    elif competitor_number == 2:
+        competitor_2_results += ';' + str(time)
+        set_obj.competitor_2_results = competitor_2_results
+
+    competitor_1_results_list = competitor_1_results.split(';')
+    competitor_2_results_list = competitor_2_results.split(';')
+    if len(competitor_1_results_list) == len(competitor_2_results_list):
+        # TODO Determine whether set has been won
+        if float(competitor_1_results_list[-1]) < float(competitor_2_results_list[-1]):
+            set_obj.competitor_1_score = set_obj.competitor_1_score + 1
+        elif float(competitor_2_results_list[-1]) < float(competitor_1_results_list[-1]):
+            set_obj.competitor_2_score = set_obj.competitor_2_score + 1
+        else:
+            # TODO Tie -> need new scramble
+            pass
+
+        async_to_sync(channel_layer.group_send)(
+            battle_group_name, {'type': 'battle.message', 'message': json.dumps({
+                'detail': 'score_update',
+                'competitor_1_score': set_obj.competitor_1_score,
+                'competitor_2_score': set_obj.competitor_2_score,
+            })}
+        )
+
+    set_obj.save()

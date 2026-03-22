@@ -19,10 +19,17 @@ class BattleView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         waiting_for_opponent = self.object.competitor_2 is None
-        context['waiting_for_opponent'] = waiting_for_opponent
-        context['user_competitor_number'] = 1 if self.object.competitor_1_id == self.request.user.pk else 2
-        if waiting_for_opponent:
+        competitor_number = 1 if self.object.competitor_1_id == self.request.user.pk else 2
+
+        if waiting_for_opponent and competitor_number == 1:
             context['base_url'] = settings.BASE_URL
+        elif competitor_number == 2:
+                self.object.competitor_2 = self.request.user
+                self.object.save()
+                waiting_for_opponent = False
+
+        context['waiting_for_opponent'] = waiting_for_opponent
+        context['user_competitor_number'] = competitor_number
 
         return context
 
