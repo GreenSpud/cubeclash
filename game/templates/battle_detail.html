@@ -11,6 +11,7 @@
     <script type="text/javascript">
         const battleId = '{{ object.pk }}';
         const competitorNumber = {{ user_competitor_number }};
+        var currentScramble = '{{ current_scramble }}';
     </script>
     <script src="{% static 'game/src/battle-manager.js' %}"></script>
     <script src="https://cdn.cubing.net/v0/js/scramble-display" type="module"></script>
@@ -63,7 +64,7 @@
     {% else %}
         <div class="battle-scramble-box">
             <span class="battle-breadcrumb">Solve 1</span>
-            <span class="battle-scramble">L2 U' F' L' D' B' U' R' U' F2 D' F2 L2 D' F2 R2 D2 R2 U' B2 R'</span>
+            <span class="battle-scramble" id="scramble-text">{{ current_scramble }}</span>
         </div>
         <div class="battle-timer-box">
             <span class="battle-timer-text">
@@ -105,7 +106,7 @@
             </table>
         </div>
         <div class="battle-draw-scramble">
-            <scramble-display scramble="L2 U' F' L' D' B' U' R' U' F2 D' F2 L2 D' F2 R2 D2 R2 U' B2 R'"></scramble-display>
+            <scramble-display id="scramble-display" scramble="{{ current_scramble }}"></scramble-display>
         </div>
     {% endif %}
 {%  endblock %}

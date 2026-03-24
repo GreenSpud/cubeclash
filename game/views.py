@@ -28,6 +28,11 @@ class BattleView(LoginRequiredMixin, DetailView):
                 self.object.save()
                 waiting_for_opponent = False
 
+        if not waiting_for_opponent:
+            current_set = self.object.sets.all().last()
+            current_scramble = current_set.scramble_set.split(';')[-1]
+            context['current_scramble'] = current_scramble
+
         context['waiting_for_opponent'] = waiting_for_opponent
         context['user_competitor_number'] = competitor_number
 

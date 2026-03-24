@@ -9,7 +9,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from .models import Battle, Set
-from .utils import init_sets
+from .utils import init_sets, get_scramble
 
 r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL)
 
@@ -137,15 +137,23 @@ def submit_time(battle_id, set_id, competitor_number: int, time: float):
             set_obj.competitor_1_score = set_obj.competitor_1_score + 1
         elif float(competitor_2_results_list[-1]) < float(competitor_1_results_list[-1]):
             set_obj.competitor_2_score = set_obj.competitor_2_score + 1
-        else:
-            # TODO Tie -> need new scramble
-            pass
 
         async_to_sync(channel_layer.group_send)(
             battle_group_name, {'type': 'battle.message', 'message': json.dumps({
                 'detail': 'score_update',
                 'competitor_1_score': set_obj.competitor_1_score,
                 'competitor_2_score': set_obj.competitor_2_score,
+            })}
+        )
+
+        new_scramble = get_scramble()
+        scramble_set = set_obj.scramble_set
+        scramble_set += ';' + new_scramble
+        set_obj.scramble_set = scramble_set
+        async_to_sync(channel_layer.group_send)(
+            battle_group_name, {'type': 'battle.message', 'message': json.dumps({
+                'detail': 'scramble',
+                'scramble': new_scramble,
             })}
         )
 

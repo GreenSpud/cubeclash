@@ -63,7 +63,7 @@ class BattleConsumer(WebsocketConsumer):
                     'type': 'battle.message', 'message': json.dumps({
                         'detail': 'competitor_joined',
                         'competitor_number': message['competitor_number'],
-                        # Should issue match/set score and all relevant solve details in case of reconnection
+                        # Should issue match/set score and all relevant solve details in case of reconnection | just do this as part of the http res
                     }),
                 })
             case 'battle.submit':
