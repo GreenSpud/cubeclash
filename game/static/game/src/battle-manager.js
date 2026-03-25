@@ -1,11 +1,12 @@
-const scrambleText = document.getElementById('scramble-text');
-const scrambleDisplay = document.getElementById('scramble-display');
-const timerText = document.getElementById('timer-text');
+let scrambleText;
+let scrambleDisplay;
+let timerText;
+let competitorNumber;
 let comp1MatchScore, comp2MatchScore = 0;
 let comp1SetScore, comp2SetScore = 0;
 let comp1Times, comp2Times = [];
 let scramble;
-let inspectionTime = 15.00;
+let inspectionTime = 16.00;
 let penalty;
 
 const updateScramble = (newScramble) => {
@@ -36,21 +37,28 @@ const handleBattleEvent = (message) => {
 const inspectionCountdown = () => {
     inspectionTime -= 0.01;
 
-    if (inspectionTime <= 0) {
-        if (inspectionTime > -2.00) {
+    if (inspectionTime < 1) {
+        if (inspectionTime > -1) {
             penalty = "+2";
         } else {
             penalty = "DNF";
         }
         timerText.innerHTML = penalty;
+    } else {
+        timerText.innerHTML = inspectionTime | 0;
     }
-
-    timerText.innerHTML = inspectionTime;
 }
 
 window.onload = () => {
+    const battleId = JSON.parse(document.getElementById('battleId').textContent);
     const socket = new WebSocket(`ws://${window.location.host}/ws/battle/${battleId}/`);
-    scramble = currentScramble;
+    const actionHintText = document.getElementById('timer-action-hint-text');
+
+    scramble = JSON.parse(document.getElementById('currentScramble').textContent);
+    competitorNumber = JSON.parse(document.getElementById('competitorNumber').textContent)
+    scrambleText = document.getElementById('scramble-text');
+    scrambleDisplay = document.getElementById('scramble-display');
+    timerText = document.getElementById('timer-text');
 
     socket.onopen = () => socket.send(
         JSON.stringify({
@@ -80,7 +88,8 @@ window.onload = () => {
         if (keyInput === 'Space') {
             timerText.classList.remove('timer-text-ready');
             timerText.classList.add('timer-text-inspection');
-            if (inspectionTime === 15.00) {
+            if (inspectionTime === 16.00) {
+                actionHintText.innerHTML = "Inspecting";
                 setInterval(inspectionCountdown, 10);
             }
         }

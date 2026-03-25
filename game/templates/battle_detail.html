@@ -8,11 +8,9 @@
     <link rel="stylesheet" href="{% static 'styles/app.css' %}">
     <link rel="stylesheet" href="{% static 'game/styles/battle.css' %}">
     <script src="{% static 'game/src/battle-page-util.js' %}"></script>
-    <script type="text/javascript">
-        const battleId = '{{ object.pk }}';
-        const competitorNumber = {{ user_competitor_number }};
-        const currentScramble = "{{ current_scramble }}";
-    </script>
+    {{ object.pk|json_script:"battleId" }}
+    {{ user_competitor_number|json_script:"competitorNumber" }}
+    {{ current_scramble|json_script:"currentScramble" }}
     <script src="{% static 'game/src/battle-manager.js' %}"></script>
     <script src="https://cdn.cubing.net/v0/js/scramble-display" type="module"></script>
 {% endblock %}
@@ -70,7 +68,7 @@
             <span class="battle-timer-text" id="timer-text">
                 0.00
             </span>
-            <span class="battle-timer-keyboard-hint">
+            <span class="battle-timer-keyboard-hint" id="timer-action-hint-text">
                 Space bar to begin inspection
             </span>
         </div>
