@@ -115,8 +115,9 @@ def find_battles(elo_catchment, battle_type):
     return result
 
 @shared_task
-def submit_time(battle_id, set_id, competitor_number: int, time: float):
-    set_obj = Set.objects.get(pk=set_id)
+def submit_time(battle_id, competitor_number: int, time: float):
+    battle = Battle.objects.get(pk=battle_id)
+    set_obj = battle.sets.all().last()
     competitor_1_results = set_obj.competitor_1_results
     competitor_2_results = set_obj.competitor_2_results
     channel_layer = get_channel_layer()

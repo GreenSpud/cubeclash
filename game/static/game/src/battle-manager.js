@@ -7,6 +7,7 @@ let comp1SetScore, comp2SetScore = 0;
 let comp1Times, comp2Times = [];
 let scramble;
 let inspecting = false;
+let timing = false;
 let inspectionTime = 16.00;
 let time = 0.00;
 let penalty;
@@ -54,6 +55,8 @@ const inspectionCountdown = () => {
 }
 
 const timer = () => {
+    if (!timing) return;
+
     time += 0.01;
     if (time < 60) {
         timerText.innerHTML = time.toFixed(1).padStart(1, '0');
@@ -93,8 +96,33 @@ window.onload = () => {
         const keyInput = e.code;
 
         if (keyInput === 'Space') {
-            timerText.classList.remove('timer-text-inspection');
-            timerText.classList.add('timer-text-ready');
+            if (time > 0) {
+                timing = false;
+
+                if (time < 60) {
+                    timerText.innerHTML = time.toFixed(2).padStart(1, '0');
+                } else {
+                    const minutes = String(Math.floor(time / 60)).padStart(1, '0');
+                    const seconds = (time % 60).toFixed(2).padStart(4, '0');
+                    timerText.innerHTML = minutes + ':' + seconds;
+                }
+
+                clearInterval(timer);
+                actionHintText.innerHTML = "Space bar to begin inspection";
+
+                socket.send(
+                    JSON.stringify({
+                        'event': 'battle.submit',
+                        'message': {
+                            'competitor_number': competitorNumber,
+                            'time': time.toFixed(2),
+                        }
+                    })
+                );
+            } else {
+                timerText.classList.remove('timer-text-inspection');
+                timerText.classList.add('timer-text-ready');
+            }
         }
     })
 
@@ -102,14 +130,15 @@ window.onload = () => {
         const keyInput = e.code;
 
         if (keyInput === 'Space') {
-            if (inspectionTime === 16.00) {
+            if (inspectionTime === 16) {
                 inspecting = true;
                 timerText.classList.remove('timer-text-ready');
                 timerText.classList.add('timer-text-inspection');
                 actionHintText.innerHTML = "Inspecting";
                 setInterval(inspectionCountdown, 10);
-            } else {
+            } else if (time === 0) {
                 inspecting = false;
+                timing = true;
                 timerText.classList.remove('timer-text-ready');
                 timerText.classList.remove('timer-text-inspection');
                 actionHintText.innerHTML = "Timing";
