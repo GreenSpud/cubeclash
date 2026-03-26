@@ -6,7 +6,9 @@ let comp1MatchScore, comp2MatchScore = 0;
 let comp1SetScore, comp2SetScore = 0;
 let comp1Times, comp2Times = [];
 let scramble;
+let inspecting = false;
 let inspectionTime = 16.00;
+let time = 0.00;
 let penalty;
 
 const updateScramble = (newScramble) => {
@@ -35,6 +37,8 @@ const handleBattleEvent = (message) => {
 }
 
 const inspectionCountdown = () => {
+    if (!inspecting) return;
+
     inspectionTime -= 0.01;
 
     if (inspectionTime < 1) {
@@ -46,6 +50,17 @@ const inspectionCountdown = () => {
         timerText.innerHTML = penalty;
     } else {
         timerText.innerHTML = inspectionTime | 0;
+    }
+}
+
+const timer = () => {
+    time += 0.01;
+    if (time < 60) {
+        timerText.innerHTML = time.toFixed(1).padStart(1, '0');
+    } else {
+        const minutes = String(Math.floor(time / 60)).padStart(1, '0');
+        const seconds = (time % 60).toFixed(1).padStart(4, '0');
+        timerText.innerHTML = minutes + ':' + seconds;
     }
 }
 
@@ -78,6 +93,7 @@ window.onload = () => {
         const keyInput = e.code;
 
         if (keyInput === 'Space') {
+            timerText.classList.remove('timer-text-inspection');
             timerText.classList.add('timer-text-ready');
         }
     })
@@ -86,11 +102,19 @@ window.onload = () => {
         const keyInput = e.code;
 
         if (keyInput === 'Space') {
-            timerText.classList.remove('timer-text-ready');
-            timerText.classList.add('timer-text-inspection');
             if (inspectionTime === 16.00) {
+                inspecting = true;
+                timerText.classList.remove('timer-text-ready');
+                timerText.classList.add('timer-text-inspection');
                 actionHintText.innerHTML = "Inspecting";
                 setInterval(inspectionCountdown, 10);
+            } else {
+                inspecting = false;
+                timerText.classList.remove('timer-text-ready');
+                timerText.classList.remove('timer-text-inspection');
+                actionHintText.innerHTML = "Timing";
+                clearInterval(inspectionCountdown);
+                setInterval(timer, 10);
             }
         }
     })
