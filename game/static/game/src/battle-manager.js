@@ -13,7 +13,7 @@ let inspecting = false;
 let timing = false;
 let inspectionTime = 16.0;
 let time = 0.0;
-let penalty;
+let currentPenalty = 0;
 
 const updateScramble = (newScramble) => {
     scrambleText.innerHTML = newScramble;
@@ -23,18 +23,21 @@ const updateScramble = (newScramble) => {
 const getResultText = (result) => {
     let suffix = "";
 
-    if (penalty > 0) {
-        suffix = "+"
-    } else if (penalty === -1) {
-        return "DNF";
-    } else if (penalty === -2) {
-        return "DNS";
+    if (result < 0) {
+        if (result === -1) {
+            return "DNF";
+        } else if (result === -2) {
+            return "DNS";
+        } else {
+            suffix = "+"
+            result = Math.abs(result);
+        }
     }
 
-    if (time < 60) {
+    if (result < 60) {
         return result.toFixed(2).padStart(1, '0') + suffix;
     } else {
-        const minutes = String(Math.floor(time / 60)).padStart(1, '0');
+        const minutes = String(Math.floor(result / 60)).padStart(1, '0');
         const seconds = (result % 60).toFixed(1).padStart(4, '0');
         return minutes + ':' + seconds + suffix;
     }
@@ -44,26 +47,24 @@ const updateScoresHTML = () => {
     const resultsTable = document.getElementById('results-table');
     const userSetScoreLabel = document.getElementById('user-set-score');
     const opponentSetScoreLabel = document.getElementById('opponent-set-score');
-    let tableContent = document.getElementById('results-table-headings').innerHTML;
+    let rowsToAppend = '';
 
     if (competitorNumber === 1) {
         userSetScoreLabel.innerHTML = comp1SetScore;
         opponentSetScoreLabel.innerHTML = comp2SetScore;
-        for (let i = 0; i < comp1Times.length; i++) {
-            tableContent += `<tr></tr><td>${i + 1}</td><td>${comp1Times[i]}</td><td>${comp2Times[i]}</td></tr>`;
+        for (let i = comp1Times.length - 1; i >= 0; i--) {
+            rowsToAppend += `<tr><td>${i + 1}</td><td ${comp1Times[i] < comp2Times[i] ? 'class="text-green"' : ''}>${comp1Times[i]}</td><td ${comp2Times[i] < comp1Times[i] ? 'class="text-green"' : ''}>${comp2Times[i]}</td></tr>`;
         }
     } else {
         userSetScoreLabel.innerHTML = comp2SetScore;
         opponentSetScoreLabel.innerHTML = comp1SetScore;
-        for (let i = 0; i < comp1Times.length; i++) {
-            tableContent += `<tr></tr><td>${i + 1}</td><td>${comp2Times[i]}</td><td>${comp1Times[i]}</td></tr>`;
+        for (let i = comp1Times.length - 1; i >= 0; i--) {
+            rowsToAppend += `<tr><td>${i + 1}</td><td ${comp2Times[i] < comp1Times[i] ? 'class="text-green"' : ''}>${comp2Times[i]}</td><td ${comp1Times[i] < comp2Times[i] ? 'class="text-green"' : ''}>${comp1Times[i]}</td></tr>`;
         }
     }
 
-    resultsTable.innerHTML = tableContent;
-    resultsTable.style = `tr:nth-child(even) {
-        background-color: #403939;
-    }`;
+    const tableContent = document.getElementById('results-table-headings').outerHTML;
+    resultsTable.innerHTML = tableContent + rowsToAppend;
 }
 
 const handleBattleEvent = (message) => {
@@ -74,8 +75,8 @@ const handleBattleEvent = (message) => {
             }
             break;
         case 'score_update':
-            comp1Times.push(getResultText(message.competitor_1_latest_result));
-            comp2Times.push(getResultText(message.competitor_2_latest_result));
+            comp1Times.push(getResultText(message.competitor_1_latest_result, message.competitor_1_latest_result));
+            comp2Times.push(getResultText(message.competitor_2_latest_result, message.competitor_2_latest_result));
             comp1SetScore = message.competitor_1_score;
             comp2SetScore = message.competitor_2_score;
             updateScoresHTML();
@@ -85,6 +86,7 @@ const handleBattleEvent = (message) => {
             updateScramble(scramble);
             timing = false;
             inspectionTime = 16.0;
+            currentPenalty = 0;
             time = 0.0;
             actionHintText.innerHTML = "Space bar to begin inspection";
             solveNoLabel.innerHTML = "Solve " + (comp1Times.length + 1);
@@ -103,10 +105,10 @@ const inspectionCountdown = () => {
 
     if (inspectionTime < 1) {
         if (inspectionTime > -1) {
-            penalty = 2;
+            currentPenalty = 2;
             timerText.innerHTML = "+2";
         } else {
-            penalty = -1;
+            currentPenalty = -1;
             timerText.innerHTML = "DNF";
         }
     } else {
@@ -130,6 +132,8 @@ const timer = () => {
 window.onload = () => {
     const battleId = JSON.parse(document.getElementById('battleId').textContent);
     const socket = new WebSocket(`ws://${window.location.host}/ws/battle/${battleId}/`);
+    let timerInterval;
+    let inspectionInterval;
     scramble = JSON.parse(document.getElementById('currentScramble').textContent);
     competitorNumber = JSON.parse(document.getElementById('competitorNumber').textContent)
     scrambleText = document.getElementById('scramble-text');
@@ -160,10 +164,15 @@ window.onload = () => {
             if (time > 0 && timing) {
                 timing = false;
 
-                time = penalty > 0 ? time + penalty : time;
+                if (currentPenalty > 0) {
+                    time = 0 - (time + currentPenalty);
+                } else if (currentPenalty < 0) {
+                    time = currentPenalty;
+                }
+
                 timerText.innerHTML = getResultText(time);
 
-                clearInterval(timer);
+                clearInterval(timerInterval);
                 actionHintText.innerHTML = "Waiting for opponent";
 
                 socket.send(
@@ -171,13 +180,13 @@ window.onload = () => {
                         'event': 'battle.submit',
                         'message': {
                             'competitor_number': competitorNumber,
-                            'time': penalty < 0? penalty : time.toFixed(2),
+                            'time': time.toFixed(2),
                         }
                     })
                 );
             } else if (!timing) {
-                timerText.classList.remove('timer-text-inspection');
-                timerText.classList.add('timer-text-ready');
+                timerText.classList.remove('text-red');
+                timerText.classList.add('text-green');
             }
         }
     })
@@ -188,18 +197,18 @@ window.onload = () => {
         if (keyInput === 'Space') {
             if (inspectionTime === 16) {
                 inspecting = true;
-                timerText.classList.remove('timer-text-ready');
-                timerText.classList.add('timer-text-inspection');
+                timerText.classList.remove('text-green');
+                timerText.classList.add('text-red');
                 actionHintText.innerHTML = "Inspecting";
-                setInterval(inspectionCountdown, 10);
+                inspectionInterval = setInterval(inspectionCountdown, 10);
             } else if (time === 0) {
                 inspecting = false;
                 timing = true;
-                timerText.classList.remove('timer-text-ready');
-                timerText.classList.remove('timer-text-inspection');
+                timerText.classList.remove('text-green');
+                timerText.classList.remove('text-red');
                 actionHintText.innerHTML = "Timing";
-                clearInterval(inspectionCountdown);
-                setInterval(timer, 10);
+                clearInterval(inspectionInterval);
+                timerInterval = setInterval(timer, 10);
             }
         }
     })
