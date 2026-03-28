@@ -61,7 +61,7 @@
         </div>
     {% else %}
         <div class="battle-scramble-box">
-            <span class="battle-breadcrumb">Solve 1</span>
+            <span class="battle-breadcrumb" id="solve-number-text">Solve 1</span>
             <span class="battle-scramble" id="scramble-text">{{ current_scramble }}</span>
         </div>
         <div class="battle-timer-box">
@@ -82,17 +82,17 @@
                     {{ object.competitor_1.username }}
                 {% endif %}
             </div>
-            <table class="battle-results-table">
-                <tr>
+            <table class="battle-results-table" id="results-table">
+                <tr id="results-table-headings">
                     <th>Solve</th>
                     <th>
-                        {{ user.get_username }} (0)
+                        {{ user.get_username }} (<span id="user-set-score">0</span>)
                     </th>
                     <th>
                         {% if user_competitor_number == 1 %}
-                            {{ object.competitor_2.username }} (0)
+                            {{ object.competitor_2.username }} (<span id="opponent-set-score">0</span>)
                         {% else %}
-                            {{ object.competitor_1.username }} (0)
+                            {{ object.competitor_1.username }} (<span id="opponent-set-score">0</span>)
                         {% endif %}
                     </th>
                 </tr>

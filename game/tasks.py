@@ -142,6 +142,8 @@ def submit_time(battle_id, competitor_number: int, time: float):
         async_to_sync(channel_layer.group_send)(
             battle_group_name, {'type': 'battle.message', 'message': json.dumps({
                 'detail': 'score_update',
+                'competitor_1_latest_result': float(competitor_1_results_list[-1]),
+                'competitor_2_latest_result': float(competitor_2_results_list[-1]),
                 'competitor_1_score': set_obj.competitor_1_score,
                 'competitor_2_score': set_obj.competitor_2_score,
             })}
