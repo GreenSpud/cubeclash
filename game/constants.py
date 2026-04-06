@@ -47,3 +47,5 @@ BATTLE_WIN_CONDITIONS = {
     'bo3ft5': lambda s1, s2: s1 == 2 or s2 == 2,
     'bo5ft5': lambda s1, s2: s1 == 3 or s2 == 3,
 }
+
+ELO_AMP_COEFFICIENT = 30

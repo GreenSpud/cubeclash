@@ -3,6 +3,7 @@ let scrambleDisplay;
 let timerText;
 let actionHintText;
 let solveNoLabel;
+let penaltyOptionBox;
 let competitorNumber;
 let comp1MatchScore = 0;
 let comp2MatchScore = 0;
@@ -15,7 +16,7 @@ let inspecting = false;
 let timing = false;
 let inspectionTime = 16.0;
 let time = 0.0;
-let currentPenalty = 0;
+let currentInspectionPenalty = 0;
 
 const handleBattleEvent = (message) => {
     switch (message.detail) {
@@ -36,7 +37,7 @@ const handleBattleEvent = (message) => {
             updateScramble(scramble);
             timing = false;
             inspectionTime = 16.0;
-            currentPenalty = 0;
+            currentInspectionPenalty = 0;
             time = 0.0;
             actionHintText.innerHTML = "Space bar to begin inspection";
             solveNoLabel.innerHTML = "Solve " + (comp1Times.length + 1);
@@ -79,6 +80,13 @@ const getResultText = (result) => {
         const minutes = String(Math.floor(result / 60)).padStart(1, '0');
         const seconds = (result % 60).toFixed(1).padStart(4, '0');
         return minutes + ':' + seconds + suffix;
+    }
+}
+
+const applyPenalty = (penFunc) => {
+    if (time !== 0) {
+        time = penFunc(time);
+        timerText.innerHTML = getResultText(time);
     }
 }
 
@@ -130,10 +138,10 @@ const inspectionCountdown = () => {
 
     if (inspectionTime < 1) {
         if (inspectionTime > -1) {
-            currentPenalty = 2;
+            currentInspectionPenalty = 2;
             timerText.innerHTML = "+2";
         } else {
-            currentPenalty = -1;
+            currentInspectionPenalty = -1;
             timerText.innerHTML = "DNF";
         }
     } else {
@@ -166,7 +174,7 @@ window.onload = () => {
     timerText = document.getElementById('timer-text');
     actionHintText = document.getElementById('timer-action-hint-text');
     solveNoLabel = document.getElementById('solve-number-text');
-
+    penaltyOptionBox = document.getElementById('penalty-options-box');
 
     socket.onopen = () => socket.send(
         JSON.stringify({
@@ -189,15 +197,16 @@ window.onload = () => {
             if (time > 0 && timing) {
                 timing = false;
 
-                if (currentPenalty > 0) {
-                    time = 0 - (time + currentPenalty);
-                } else if (currentPenalty < 0) {
-                    time = currentPenalty;
+                if (currentInspectionPenalty > 0) {
+                    time = 0 - (time + currentInspectionPenalty);
+                } else if (currentInspectionPenalty < 0) {
+                    time = currentInspectionPenalty;
                 }
 
                 timerText.innerHTML = getResultText(time);
 
                 clearInterval(timerInterval);
+                penaltyOptionBox.style.display = 'block';
                 actionHintText.innerHTML = "Waiting for opponent";
 
                 socket.send(
@@ -225,6 +234,7 @@ window.onload = () => {
                 timerText.classList.remove('text-green');
                 timerText.classList.add('text-red');
                 actionHintText.innerHTML = "Inspecting";
+                penaltyOptionBox.style.display = 'none';
                 inspectionInterval = setInterval(inspectionCountdown, 10);
             } else if (time === 0) {
                 inspecting = false;

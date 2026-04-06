@@ -9,6 +9,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from .constants import SET_WIN_CONDITIONS, BATTLE_WIN_CONDITIONS
+from .elo import update_rating
 from .models import Battle, Set
 from .utils import init_set, get_scramble
 
@@ -163,9 +164,23 @@ def submit_time(battle_id, competitor_number: int, time: float):
                 if battle.competitor_1_sets > battle.competitor_2_sets:
                     winner = 'competitor_1'
                     battle.winner = battle.competitor_1
+
+                    battle.competitor_1.previous_elo = battle.competitor_1.elo
+                    battle.competitor_1.elo = update_rating(battle.competitor_1.elo, battle.competitor_2.elo, 1)
+                    battle.competitor_2.previous_elo = battle.competitor_2.elo
+                    battle.competitor_2.elo = update_rating(battle.competitor_2.elo, battle.competitor_1.elo, 0)
+                    battle.competitor_1.save()
+                    battle.competitor_2.save()
                 else:
                     winner = 'competitor_2'
                     battle.winner = battle.competitor_2
+
+                    battle.competitor_1.previous_elo = battle.competitor_1.elo
+                    battle.competitor_1.elo = update_rating(battle.competitor_1.elo, battle.competitor_2.elo, 0)
+                    battle.competitor_2.previous_elo = battle.competitor_2.elo
+                    battle.competitor_2.elo = update_rating(battle.competitor_2.elo, battle.competitor_1.elo, 1)
+                    battle.competitor_1.save()
+                    battle.competitor_2.save()
             else:
                 set_obj = init_set(battle)
                 set_obj.battle = battle

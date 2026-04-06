@@ -71,6 +71,9 @@ class BattleConsumer(WebsocketConsumer):
                 time = float(message['time'])
 
                 submit_time.delay(self.battle_id, competitor_number, time)
+            case 'battle.amend':
+                competitor_number = int(message['competitor_number'])
+
 
     def battle_message(self, event):
         message = event['message']

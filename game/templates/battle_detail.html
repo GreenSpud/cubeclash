@@ -68,6 +68,10 @@
             <span class="battle-timer-text" id="timer-text">
                 0.00
             </span>
+            <div class="battle-timer-penalty-options" id="penalty-options-box" style="display: none;">
+                <button class="battle-timer-penalty-button" onclick="applyPenalty((x) => -1 * (Math.abs(x) + 2))">+2</button>
+                <button class="battle-timer-penalty-button" onclick="applyPenalty((x) => -1)">DNF</button>
+            </div>
             <span class="battle-timer-keyboard-hint" id="timer-action-hint-text">
                 Space bar to begin inspection
             </span>

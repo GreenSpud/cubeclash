@@ -179,6 +179,25 @@ scramble-display {
     border-left: 1px solid #605252;
 }
 
+.battle-timer-penalty-options {
+    margin-bottom: 20px;
+}
+
+.battle-timer-penalty-button {
+    all: unset;
+    color: rgb(255, 150, 36);
+    text-align: center;
+    padding: 8px 10px;
+    margin: 0 2px;
+    border-radius: 20px;
+    background-color: rgb(115, 69, 15);
+}
+
+.battle-timer-penalty-button:hover {
+    background-color: rgb(255, 150, 36);
+    color: rgb(115, 69, 15);
+}
+
 .copy-link-button:hover {
     background-color: #6c6cff;
 }
