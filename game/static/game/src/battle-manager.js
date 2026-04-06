@@ -26,8 +26,8 @@ const handleBattleEvent = (message) => {
             }
             break;
         case 'score_update':
-            comp1Times.push(getResultText(message.competitor_1_latest_result, message.competitor_1_latest_result));
-            comp2Times.push(getResultText(message.competitor_2_latest_result, message.competitor_2_latest_result));
+            comp1Times.push(message.competitor_1_latest_result);
+            comp2Times.push(message.competitor_2_latest_result);
             comp1SetScore = message.competitor_1_score;
             comp2SetScore = message.competitor_2_score;
             updateScoresHTML();
@@ -104,9 +104,9 @@ const updateScoresHTML = () => {
 
         if (comp1Times.length > 0 && comp2Times.length > 0) {
             for (let i = comp1Times.length - 1; i >= 0; i--) {
-                const c1 = parseFloat(comp1Times[i]);
-                const c2 = parseFloat(comp2Times[i]);
-                rowsToAppend += `<tr><td>${i + 1}</td><td ${c1 < c2 ? 'class="text-green"' : ''}>${comp1Times[i]}</td><td ${c2 < c1 ? 'class="text-green"' : ''}>${comp2Times[i]}</td></tr>`;
+                const c1 = comp1Times[i];
+                const c2 = comp2Times[i];
+                rowsToAppend += `<tr><td>${i + 1}</td><td ${(Math.abs(c1) < Math.abs(c2) && c1 !== -1) || c2 === -1 ? 'class="text-green"' : ''}>${getResultText(c1)}</td><td ${(Math.abs(c2) < Math.abs(c1) && c2 !== -1) || c1 === -1 ? 'class="text-green"' : ''}>${getResultText(c2)}</td></tr>`;
             }
         } else {
             rowsToAppend = "<tr><td>1</td><td>-</td><td>-</td></tr>";
@@ -118,9 +118,9 @@ const updateScoresHTML = () => {
 
         if (comp1Times.length > 0 && comp2Times.length > 0) {
             for (let i = comp1Times.length - 1; i >= 0; i--) {
-                const c1 = parseFloat(comp1Times[i]);
-                const c2 = parseFloat(comp2Times[i]);
-                rowsToAppend += `<tr><td>${i + 1}</td><td ${c2 < c1 ? 'class="text-green"' : ''}>${comp2Times[i]}</td><td ${c1 < c2 ? 'class="text-green"' : ''}>${comp1Times[i]}</td></tr>`;
+                const c1 = comp1Times[i];
+                const c2 = comp2Times[i];
+                rowsToAppend += `<tr><td>${i + 1}</td><td ${(Math.abs(c2) < Math.abs(c1) && c2 !== -1) || c1 === -1 ? 'class="text-green"' : ''}>${getResultText(c2)}</td><td ${(Math.abs(c1) < Math.abs(c2) && c1 !== -1) || c2 === -1 ? 'class="text-green"' : ''}>${getResultText(c1)}</td></tr>`;
             }
         } else {
             rowsToAppend = "<tr><td>1</td><td>-</td><td>-</td></tr>";

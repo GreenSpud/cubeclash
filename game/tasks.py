@@ -136,9 +136,11 @@ def submit_time(battle_id, competitor_number: int, time: float):
     competitor_1_results_list = competitor_1_results.split(';')
     competitor_2_results_list = competitor_2_results.split(';')
     if len(competitor_1_results_list) == len(competitor_2_results_list):
-        if abs(float(competitor_1_results_list[-1])) < abs(float(competitor_2_results_list[-1])):
+        if abs(float(competitor_1_results_list[-1])) == abs(float(competitor_2_results_list[-1])):
+            pass
+        elif float(competitor_1_results_list[-1]) != -1 and (abs(float(competitor_1_results_list[-1])) < abs(float(competitor_2_results_list[-1])) or float(competitor_2_results_list[-1]) == -1):
             set_obj.competitor_1_score = set_obj.competitor_1_score + 1
-        elif abs(float(competitor_2_results_list[-1])) < abs(float(competitor_1_results_list[-1])):
+        else:
             set_obj.competitor_2_score = set_obj.competitor_2_score + 1
 
         async_to_sync(channel_layer.group_send)(
