@@ -8,8 +8,10 @@ from django.core import serializers
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from .constants import SET_WIN_CONDITIONS, BATTLE_WIN_CONDITIONS
+from .elo import update_rating
 from .models import Battle, Set
-from .utils import init_sets, get_scramble
+from .utils import init_set, get_scramble
 
 r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL)
 
@@ -92,9 +94,9 @@ def find_battles(elo_catchment, battle_type):
         )
         battle.save()
 
-        for set_obj in init_sets(battle):
-            set_obj.battle = battle
-            set_obj.save()
+        set_obj = init_set(battle)
+        set_obj.battle = battle
+        set_obj.save()
 
         battle_list.append(battle)
         result = serializers.serialize('json', battle_list, fields=['battle_type', 'competitor_1', 'competitor_2'])
@@ -115,8 +117,9 @@ def find_battles(elo_catchment, battle_type):
     return result
 
 @shared_task
-def submit_time(battle_id, set_id, competitor_number: int, time: float):
-    set_obj = Set.objects.get(pk=set_id)
+def submit_time(battle_id, competitor_number: int, time: float):
+    battle = Battle.objects.get(pk=battle_id)
+    set_obj = battle.sets.all().last()
     competitor_1_results = set_obj.competitor_1_results
     competitor_2_results = set_obj.competitor_2_results
     channel_layer = get_channel_layer()
@@ -128,23 +131,73 @@ def submit_time(battle_id, set_id, competitor_number: int, time: float):
     elif competitor_number == 2:
         competitor_2_results += ';' + str(time)
         set_obj.competitor_2_results = competitor_2_results
+    set_obj.save()
 
     competitor_1_results_list = competitor_1_results.split(';')
     competitor_2_results_list = competitor_2_results.split(';')
     if len(competitor_1_results_list) == len(competitor_2_results_list):
-        # TODO Determine whether set has been won
-        if float(competitor_1_results_list[-1]) < float(competitor_2_results_list[-1]):
+        if abs(float(competitor_1_results_list[-1])) < abs(float(competitor_2_results_list[-1])):
             set_obj.competitor_1_score = set_obj.competitor_1_score + 1
-        elif float(competitor_2_results_list[-1]) < float(competitor_1_results_list[-1]):
+        elif abs(float(competitor_2_results_list[-1])) < abs(float(competitor_1_results_list[-1])):
             set_obj.competitor_2_score = set_obj.competitor_2_score + 1
 
         async_to_sync(channel_layer.group_send)(
             battle_group_name, {'type': 'battle.message', 'message': json.dumps({
                 'detail': 'score_update',
+                'competitor_1_latest_result': float(competitor_1_results_list[-1]),
+                'competitor_2_latest_result': float(competitor_2_results_list[-1]),
                 'competitor_1_score': set_obj.competitor_1_score,
                 'competitor_2_score': set_obj.competitor_2_score,
             })}
         )
+
+        set_has_been_won = SET_WIN_CONDITIONS[set_obj.set_type](set_obj.competitor_1_score, set_obj.competitor_2_score)
+        if set_has_been_won:
+            if set_obj.competitor_1_score > set_obj.competitor_2_score:
+                battle.competitor_1_sets += 1
+            else:
+                battle.competitor_2_sets += 1
+
+            winner = None
+            battle_has_been_won = BATTLE_WIN_CONDITIONS[battle.battle_type](battle.competitor_1_sets, battle.competitor_2_sets)
+            if battle_has_been_won:
+                if battle.competitor_1_sets > battle.competitor_2_sets:
+                    winner = 'competitor_1'
+                    battle.winner = battle.competitor_1
+
+                    battle.competitor_1.previous_elo = battle.competitor_1.elo
+                    battle.competitor_1.elo = update_rating(battle.competitor_1.elo, battle.competitor_2.elo, 1)
+                    battle.competitor_2.previous_elo = battle.competitor_2.elo
+                    battle.competitor_2.elo = update_rating(battle.competitor_2.elo, battle.competitor_1.elo, 0)
+                    battle.competitor_1.save()
+                    battle.competitor_2.save()
+                else:
+                    winner = 'competitor_2'
+                    battle.winner = battle.competitor_2
+
+                    battle.competitor_1.previous_elo = battle.competitor_1.elo
+                    battle.competitor_1.elo = update_rating(battle.competitor_1.elo, battle.competitor_2.elo, 0)
+                    battle.competitor_2.previous_elo = battle.competitor_2.elo
+                    battle.competitor_2.elo = update_rating(battle.competitor_2.elo, battle.competitor_1.elo, 1)
+                    battle.competitor_1.save()
+                    battle.competitor_2.save()
+            else:
+                set_obj = init_set(battle)
+                set_obj.battle = battle
+                set_obj.save()
+            battle.save()
+
+            async_to_sync(channel_layer.group_send)(
+                battle_group_name, {'type': 'battle.message', 'message': json.dumps({
+                    'detail': 'set_finished',
+                    'battle_winner': winner,
+                    'competitor_1_sets': battle.competitor_1_sets,
+                    'competitor_2_sets': battle.competitor_2_sets,
+                })}
+            )
+
+            if winner:
+                return
 
         new_scramble = get_scramble()
         scramble_set = set_obj.scramble_set

@@ -61,13 +61,17 @@
         </div>
     {% else %}
         <div class="battle-scramble-box">
-            <span class="battle-breadcrumb">Solve 1</span>
+            <span class="battle-breadcrumb" id="solve-number-text">Solve 1</span>
             <span class="battle-scramble" id="scramble-text">{{ current_scramble }}</span>
         </div>
         <div class="battle-timer-box">
             <span class="battle-timer-text" id="timer-text">
                 0.00
             </span>
+            <div class="battle-timer-penalty-options" id="penalty-options-box" style="display: none;">
+                <button class="battle-timer-penalty-button" onclick="applyPenalty((x) => -1 * (Math.abs(x) + 2))">+2</button>
+                <button class="battle-timer-penalty-button" onclick="applyPenalty((x) => -1)">DNF</button>
+            </div>
             <span class="battle-timer-keyboard-hint" id="timer-action-hint-text">
                 Space bar to begin inspection
             </span>
@@ -75,24 +79,24 @@
         <div class="battle-results-panel">
             <div class="battle-score">
                 {{ user.get_username }}
-                <span class="battle-breadcrumb">0 • 0</span>
+                <span class="battle-breadcrumb" id="match-score">0 • 0</span>
                 {% if user_competitor_number == 1 %}
                     {{ object.competitor_2.username }}
                 {% else %}
                     {{ object.competitor_1.username }}
                 {% endif %}
             </div>
-            <table class="battle-results-table">
-                <tr>
+            <table class="battle-results-table" id="results-table">
+                <tr id="results-table-headings">
                     <th>Solve</th>
                     <th>
-                        {{ user.get_username }} (0)
+                        {{ user.get_username }} (<span id="user-set-score">0</span>)
                     </th>
                     <th>
                         {% if user_competitor_number == 1 %}
-                            {{ object.competitor_2.username }} (0)
+                            {{ object.competitor_2.username }} (<span id="opponent-set-score">0</span>)
                         {% else %}
-                            {{ object.competitor_1.username }} (0)
+                            {{ object.competitor_1.username }} (<span id="opponent-set-score">0</span>)
                         {% endif %}
                     </th>
                 </tr>

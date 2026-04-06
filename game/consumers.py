@@ -67,13 +67,13 @@ class BattleConsumer(WebsocketConsumer):
                     }),
                 })
             case 'battle.submit':
-                submission_data = json.loads(message)
-                set_id = int(submission_data['set_id'])
+                competitor_number = int(message['competitor_number'])
+                time = float(message['time'])
 
-                competitor_number = int(submission_data['competitor_number'])
-                time = float(submission_data['time'])
+                submit_time.delay(self.battle_id, competitor_number, time)
+            case 'battle.amend':
+                competitor_number = int(message['competitor_number'])
 
-                submit_time.delay(self.battle_id, set_id, competitor_number, time)
 
     def battle_message(self, event):
         message = event['message']
