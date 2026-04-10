@@ -75,14 +75,14 @@ class JoinBattleView(View):
             return HttpResponseServerError()
 
 class CancelMatchmakingView(View):
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
 
         exit_result = leave_battle_queue.delay(
             request.user.pk,
             request.user.elo,
-            request.GET.get('battle_type'),
+            request.POST.get('battle_type'),
         ).get()
 
         if exit_result.get('status') == 'left_queue':

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'styles/app.css' %}">
     <link rel="stylesheet" href="{% static 'game/styles/dashboard.css' %}">
     <script src="{% static 'game/src/matchmaking-form-handlers.js' %}"></script>
+    <script src="{% static 'src/util.js' %}"></script>
 {% endblock %}
 {% block app_content %}
     <div class="dashboard-elo-box">
@@ -84,14 +85,14 @@
             </button>
         </form>
     </div>
-    <div class="dashboard-matchmaking-loading-wrapper" id="matchmaking-loading-wrapper">
+    <form class="dashboard-matchmaking-loading-wrapper" id="matchmaking-loading-wrapper">
         <div class="dashboard-matchmaking-loading">
             <div class="dashboard-matchmaking-loading-message">
                 <span>Waiting for battles</span>
             </div>
-            <button id="cancel" class="dashboard-matchmaking-cancel-button">
+            <button type="submit" class="dashboard-matchmaking-cancel-button" >
                 Cancel
             </button>
         </div>
-    </div>
+    </form>
 {% endblock %}
