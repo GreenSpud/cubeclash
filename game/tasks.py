@@ -1,3 +1,4 @@
+from datetime import datetime
 import redis
 import json
 import math
@@ -199,6 +200,8 @@ def submit_time(battle_id, competitor_number: int, time: float):
                     battle.competitor_2.elo = update_rating(battle.competitor_2.elo, battle.competitor_1.elo, 1)
                     battle.competitor_1.save()
                     battle.competitor_2.save()
+
+                battle.end = datetime.now()
             else:
                 set_obj = init_set(battle)
                 set_obj.battle = battle

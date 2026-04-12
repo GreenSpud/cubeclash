@@ -32,36 +32,24 @@
                 <th>Opponent</th>
                 <th>Links</th>
             </tr>
-            <tr>
-                <td class="dashboard-match-history-table-win-cell">WIN</td>
-                <td>Today 09:30 am</td>
-                <td>Bo5</td>
-                <td><a href="/users/eg">faz2887 (1879)</a></td>
-                <td><a href="/battle/26638c2e-446c-4ef8-a980-effcbbaaa2dd/details">Details</a></td>
-            </tr>
-            <tr>
-                <td class="dashboard-match-history-table-loss-cell">LOSS</td>
-                <td>Today 09:13 am</td>
-                <td>Bo5</td>
-                <td><a href="/users/eg">jacobjoshi (1760)</a></td>
-                <td><a href="/battle/26638c2e-446c-4ef8-a980-effcbbaaa2dd/details">Details</a></td>
-            </tr>
-            <tr>
-                <td class="dashboard-match-history-table-loss-cell">LOSS</td>
-                <td>13 Jan 04:45 pm</td>
-                <td>Bo5</td>
-                <td><a href="/users/eg">tymonkol (2957)</a></td>
-                <td>
-                    <a href="/battle/26638c2e-446c-4ef8-a980-effcbbaaa2dd/details">Details</a><br>
-                </td>
-            </tr>
-            <tr>
-                <td class="dashboard-match-history-table-loss-cell">FORFEIT</td>
-                <td>13 Jan 02:12 pm</td>
-                <td>Bo3 sets (first to 5)</td>
-                <td><a href="/users/eg">randoa2mon (2030)</a></td>
-                <td><a href="/battle/26638c2e-446c-4ef8-a980-effcbbaaa2dd/details">Details</a></td>
-            </tr>
+            {% if recent_battles|length == 0 %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            {% for b in recent_battles %}
+                <tr>
+                    <td class="dashboard-match-history-table-{{ b.result }}-cell">{{ b.result|upper }}</td>
+                    <td>{{ b.end|date:"d M g:i A" }}</td>
+                    <td>{{ b.battle_type }}</td>
+                    <td><a href="/users/{{ b.opponent.username }}">{{ b.opponent.username }}</a></td>
+                    <td><a href="/battle/{{ b.id }}/details">Details</a></td>
+                </tr>
+            {% endfor %}
         </table>
     </div>
     <div class="dashboard-start-battle">

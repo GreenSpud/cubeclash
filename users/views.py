@@ -50,7 +50,6 @@ class AuthRedirectView(View):
         })
 
         data = user_response.json()['me']
-        print(data)
 
         # Unfortunate workaround as cannot catch the DoesNotExist exception
         users_result = User.objects.filter(email=data['email']).all()
