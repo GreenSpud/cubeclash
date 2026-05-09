@@ -11,6 +11,18 @@
 {% endblock %}
 {% block app_content %}
     <h2><span class="overview-battle-type">{{ battle_type_display }}</span> ⸱ {{ object.end|date:"d M g:i A" }}</h2>
+    <div class="overview-battle-description-box">
+        <p>
+            <a class="overview-user-label-text" href="/users/{{ object.winner.username }}" target="_blank">{{ object.winner.username }}</a> won the battle
+            {% if object.competitor_1_sets > object.competitor_2_sets %}{{ object.competitor_1_sets }}{% else %}{{ object.competitor_2_sets }}{% endif %} set(s) to
+            {% if object.competitor_1_sets < object.competitor_2_sets %}{{ object.competitor_1_sets }}{% else %}{{ object.competitor_2_sets }}{% endif %}.
+        </p>
+    </div>
+    <div class="overview-set-nav">
+        <button class="overview-set-tab tab-selected">Set 1</button>
+        <button class="overview-set-tab">Set 2</button>
+        <button class="overview-set-tab">Set 3</button>
+    </div>
     <div class="overview-user-label-box">
         <div class="overview-user-label">
             <span class="battle-competitor-avatar">
@@ -25,4 +37,25 @@
             </span>
             <a class="overview-user-label-text" href="/users/{{ object.competitor_2.username }}" target="_blank">{{ object.competitor_2.username }}</a> <span class="battle-competitor-elo">({{ object.competitor_2.elo|floatformat:"0" }})</span>
         </div>
+    </div>
+    <div>
+        <table class="overview-set-table">
+            <tr>
+                <td class="overview-comp1-result-label">5.03</td>
+                <td class="overview-comp2-result-label overview-set-table-win-cell">4.49</td>
+            </tr>
+            <tr>
+                <td class="overview-comp1-result-label overview-set-table-win-cell">5.60</td>
+                <td class="overview-comp2-result-label">6.55</td>
+            </tr>
+            <tr>
+                <td class="overview-comp1-result-label">6.22</td>
+                <td class="overview-comp2-result-label overview-set-table-win-cell">5.38</td>
+            </tr>
+            <tr>
+                <td class="overview-comp1-result-label">4.90</td>
+                <td class="overview-comp2-result-label overview-set-table-win-cell">3.99</td>
+            </tr>
+        </table>
+    </div>
 {% endblock %}

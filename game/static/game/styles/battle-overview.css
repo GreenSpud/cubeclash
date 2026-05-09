@@ -16,19 +16,80 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px;
+    padding: 16px 0;
     margin-top: 6px;
+}
+
+.overview-battle-description-box {
+    padding: 6px 0;
 }
 
 .overview-battle-type {
     padding: 6px 12px;
     text-align: center;
+    font-weight: normal;
     background-color: rgba(108, 108, 255, 0.33);
-    border: 1px solid rgb(80, 80, 193);
+    border: 1px solid rgb(69, 69, 161);
     color: #ffffff;
     border-radius: 45px;
 }
 
+.overview-set-nav {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.overview-set-tab {
+    appearance: none;
+    text-align: center;
+    padding: 14px 50px;
+    background-color: #403939;
+    border: 1px solid #605252;
+    width: 100%;
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.tab-selected {
+    background-color: #605252;
+}
+
+.overview-set-tab:hover {
+    background-color: #453d3d;
+}
+
 .overview-versus-text {
     padding: 5px;
+}
+
+.overview-set-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 1em;
+}
+
+.overview-set-table td {
+    padding: 8px;
+}
+
+.overview-set-table th {
+    padding: 8px;
+}
+
+.overview-set-table tr:nth-child(odd) {
+    background-color: #403939;
+}
+
+.overview-set-table-win-cell {
+    color: #67dc57;
+}
+
+.overview-comp1-result-label {
+    text-align: left;
+}
+
+.overview-comp2-result-label {
+    text-align: right;
 }
